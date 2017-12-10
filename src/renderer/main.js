@@ -24,6 +24,8 @@ tcp.client.connect(store.state.tcp.port, store.state.tcp.host, function () {
 
 tcp.client.on('error', function (error) {
   console.log(error.message)
+  store.commit('setConnect', {connect: false})
+  router.push('/network-error')
 })
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))

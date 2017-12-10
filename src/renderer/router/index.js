@@ -10,8 +10,8 @@ export default new Router({
       component: require('@/components/index').default
     },
     {
-      path: '*',
-      redirect: '/'
+      path: '/network-error',
+      component: require('@/components/networkerror').default
     }
   ]
 })
