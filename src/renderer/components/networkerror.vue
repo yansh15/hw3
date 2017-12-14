@@ -25,6 +25,7 @@ export default {
       let vm = this
       this.$tcp.client.connect(this.$store.state.tcp.port, this.$store.state.tcp.host, function () {
         vm.$store.commit('setConnect', {connect: true})
+        vm.$router.push('/')
       })
     }
   }

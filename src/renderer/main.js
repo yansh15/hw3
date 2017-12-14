@@ -12,6 +12,7 @@ Vue.use(ElementUI)
 Vue.prototype.$tcp = tcp
 
 tcp.client.on('data', function (data) {
+  tcp.buffer.addNewBuffer(data)
 })
 
 tcp.client.on('close', function () {
@@ -28,14 +29,26 @@ tcp.client.on('error', function (error) {
   router.push('/network-error')
 })
 
+tcp.buffer.on('response', function (response) {
+  console.log(response)
+  if (response.uuid === 'message') {
+    tcp.handleServerMessage(app, response)
+  } else if (typeof tcp.callbacks[response.uuid] === 'function') {
+    tcp.callbacks[response.uuid](response)
+    tcp.callbacks[response.uuid] = true
+  }
+})
+
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.http = Vue.prototype.$http = axios
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */
-new Vue({
+let app = new Vue({
   router,
   store,
   components: { App },
   template: '<App/>'
-}).$mount('#app')
+})
+
+app.$mount('#app')

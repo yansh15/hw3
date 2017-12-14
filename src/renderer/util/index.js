@@ -13,5 +13,19 @@ export default {
       }
     }
     return uid.join('')
-  }
+  },
+  getStringFromSeconds: function (seconds) {
+    return new Date(1000 * seconds).toLocaleString()
+  },
+  getDateStringFromSeconds: function (seconds) {
+    return new Date(1000 * seconds).toLocaleDateString()
+  },
+  getTimeStringFromSeconds: function (seconds) {
+    return new Date(1000 * seconds).toLocaleTimeString()
+  },
+  getCurrentSeconds: function () {
+    return Math.ceil(new Date().getTime() / 1000)
+  },
+  usernameRegex: /^[A-Za-z0-9]{4,64}$/,
+  passwordRegex: /^[A-Za-z0-9]{4,64}$/
 }
