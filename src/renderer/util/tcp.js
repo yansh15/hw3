@@ -43,72 +43,90 @@ Tcp.prototype.setTimeout = function (uuid) {
   }, 3000)
 }
 
-Tcp.prototype.register = function (username, password, callback) {
+Tcp.prototype.register = function (username, password) {
   const uid = util.uuid()
-  this.callbacks[uid] = callback
-  this.write({
-    action: this.REGISTEROP,
-    uuid: uid,
-    username: username,
-    password: password
+  let tcp = this
+  return new Promise(function (resolve, reject) {
+    tcp.callbacks[uid] = resolve
+    tcp.write({
+      action: tcp.REGISTEROP,
+      uuid: uid,
+      username: username,
+      password: password
+    })
+    tcp.setTimeout(uid)
   })
-  this.setTimeout(uid)
 }
 
-Tcp.prototype.login = function (username, password, callback) {
+Tcp.prototype.login = function (username, password) {
   const uid = util.uuid()
-  this.callbacks[uid] = callback
-  this.write({
-    action: this.LOGINOP,
-    uuid: uid,
-    username: username,
-    password: password
+  let tcp = this
+  return new Promise(function (resolve, reject) {
+    tcp.callbacks[uid] = resolve
+    tcp.write({
+      action: tcp.LOGINOP,
+      uuid: uid,
+      username: username,
+      password: password
+    })
+    tcp.setTimeout(uid)
   })
-  this.setTimeout(uid)
 }
 
-Tcp.prototype.quit = function (callback) {
+Tcp.prototype.quit = function () {
   const uid = util.uuid()
-  this.callbacks[uid] = callback
-  this.write({
-    action: this.QUITOP,
-    uuid: uid
+  let tcp = this
+  return new Promise(function (resolve, reject) {
+    tcp.callbacks[uid] = resolve
+    tcp.write({
+      action: tcp.QUITOP,
+      uuid: uid
+    })
+    tcp.setTimeout(uid)
   })
-  this.setTimeout(uid)
 }
 
-Tcp.prototype.search = function (callback) {
+Tcp.prototype.search = function () {
   const uid = util.uuid()
-  this.callbacks[uid] = callback
-  this.write({
-    action: this.SEARCHOP,
-    uuid: uid
+  let tcp = this
+  return new Promise(function (resolve, reject) {
+    tcp.callbacks[uid] = resolve
+    tcp.write({
+      action: tcp.SEARCHOP,
+      uuid: uid
+    })
+    tcp.setTimeout(uid)
   })
-  this.setTimeout(uid)
 }
 
-Tcp.prototype.add = function (username, callback) {
+Tcp.prototype.add = function (username) {
   const uid = util.uuid()
-  this.callbacks[uid] = callback
-  this.write({
-    action: this.ADDOP,
-    uuid: uid,
-    username: username
+  let tcp = this
+  return new Promise(function (resolve, reject) {
+    tcp.callbacks[uid] = resolve
+    tcp.write({
+      action: tcp.ADDOP,
+      uuid: uid,
+      username: username
+    })
+    tcp.setTimeout(uid)
   })
-  this.setTimeout(uid)
 }
 
-Tcp.prototype.sendMessage = function (username, message, time, callback) {
+Tcp.prototype.sendMessage = function (username, message, time) {
   const uid = util.uuid()
-  this.callbacks[uid] = callback
-  this.write({
-    action: this.SENDMESSAGEOP,
-    uuid: uid,
-    username: username,
-    message: message,
-    time: time
+  let tcp = this
+  return new Promise(function (resolve, reject) {
+    tcp.callbacks[uid] = resolve
+    tcp.write({
+      action: tcp.SENDMESSAGEOP,
+      uuid: uid,
+      username: username,
+      message: message,
+      time: time
+    })
+    tcp.setTimeout(uid)
   })
-  this.setTimeout(uid)
 }
 
 Tcp.prototype.handleServerMessage = function (app, message) {

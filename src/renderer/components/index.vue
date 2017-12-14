@@ -97,55 +97,51 @@ export default {
     }
   },
   methods: {
-    register () {
+    register: async function () {
       this.waitingResponse = true
       this.waitingTip = '注册中...'
-      let vm = this
-      this.$tcp.register(this.registerInfo.username, this.registerInfo.password, function (response) {
-        vm.waitingResponse = false
-        vm.waitingTip = ''
-        switch (response.status) {
-          case vm.$tcp.SUCCESS:
-            vm.$message.success('register successfully')
-            vm.$store.commit('login', { username: vm.registerInfo.username })
-            vm.$router.push('/main/chat')
-            break
-          case vm.$tcp.TIMEOUT:
-            vm.$message.error('network timeout')
-            break
-          case vm.$tcp.USERNAMEEXIST:
-            vm.$message.error('username exist')
-            break
-        }
-      })
+      let response = await this.$tcp.register(this.registerInfo.username, this.registerInfo.password)
+      this.waitingResponse = false
+      this.waitingTip = ''
+      switch (response.status) {
+        case this.$tcp.SUCCESS:
+          this.$message.success('register successfully')
+          this.$store.commit('login', { username: this.registerInfo.username })
+          this.$router.push('/main/chat')
+          break
+        case this.$tcp.TIMEOUT:
+          this.$message.error('network timeout')
+          break
+        case this.$tcp.USERNAMEEXIST:
+          this.$message.error('username exist')
+          break
+      }
     },
-    login () {
+    login: async function () {
       this.waitingResponse = true
       this.waitingTip = '登录中...'
-      let vm = this
-      this.$tcp.login(this.loginInfo.username, this.loginInfo.password, function (response) {
-        vm.waitingResponse = false
-        vm.waitingTip = ''
-        switch (response.status) {
-          case vm.$tcp.SUCCESS:
-            vm.$message.success('login successfully')
-            vm.$store.commit('login', { username: vm.loginInfo.username })
-            vm.$store.commit('updateFriendList', { list: response.friends })
-            vm.$store.commit('updateMessageList', { list: response.messages })
-            vm.$store.commit('updateFileList', { list: response.files })
-            vm.$router.push('/main/chat')
-            break
-          case vm.$tcp.TIMEOUT:
-            vm.$message.error('network timeout')
-            break
-          case vm.$tcp.USERNAMENOTEXIST:
-            vm.$message.error('username not exist')
-            break
-          case vm.$tcp.PASSWORDWRONG:
-            vm.$message.error('password wrong')
-            break
-        }
-      })
+      let response = await this.$tcp.login(this.loginInfo.username, this.loginInfo.password)
+      this.waitingResponse = false
+      this.waitingTip = ''
+      switch (response.status) {
+        case this.$tcp.SUCCESS:
+          this.$message.success('login successfully')
+          this.$store.commit('login', { username: this.loginInfo.username })
+          this.$store.commit('updateFriendList', { list: response.friends })
+          this.$store.commit('updateMessageList', { list: response.messages })
+          this.$store.commit('updateFileList', { list: response.files })
+          this.$router.push('/main/chat')
+          break
+        case this.$tcp.TIMEOUT:
+          this.$message.error('network timeout')
+          break
+        case this.$tcp.USERNAMENOTEXIST:
+          this.$message.error('username not exist')
+          break
+        case this.$tcp.PASSWORDWRONG:
+          this.$message.error('password wrong')
+          break
+      }
     }
   }
 }

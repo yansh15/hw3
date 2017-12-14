@@ -20,20 +20,18 @@ export default {
     }
   },
   methods: {
-    quit () {
-      let vm = this
-      this.$tcp.quit(function (response) {
-        switch (response.status) {
-          case vm.$tcp.SUCCESS:
-            vm.$message.success('quit successfully')
-            vm.$store.commit('clearUserInfo')
-            vm.$router.push('/')
-            break
-          case vm.$tcp.TIMEOUT:
-            vm.$message.error('network timeout')
-            break
-        }
-      })
+    quit: async function () {
+      let response = await this.$tcp.quit()
+      switch (response.status) {
+        case this.$tcp.SUCCESS:
+          this.$message.success('quit successfully')
+          this.$store.commit('clearUserInfo')
+          this.$router.push('/')
+          break
+        case this.$tcp.TIMEOUT:
+          this.$message.error('network timeout')
+          break
+      }
     }
   }
 }
