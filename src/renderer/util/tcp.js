@@ -7,6 +7,30 @@ function Tcp () {
   this.client = new Socket()
   this.callbacks = []
   this.buffer = new TcpBuffer()
+  this.socketCloseListener = function () {}
+  this.socketErrorListener = function (error) { console.log(error) }
+  this.serverMessageListener = function (message) {}
+
+  let tcp = this
+  this.client.on('data', function (data) {
+    tcp.buffer.addNewBuffer(data)
+  })
+  this.client.on('close', function () {
+    tcp.socketCloseListener()
+  })
+  this.client.on('error', function (error) {
+    tcp.socketErrorListener(error)
+  })
+
+  this.buffer.on('response', function (response) {
+    console.log(response)
+    if (typeof tcp.callbacks[response.uuid] === 'undefined') {
+      tcp.serverMessageListener(response)
+    } else if (typeof tcp.callbacks[response.uuid] === 'function') {
+      tcp.callbacks[response.uuid](response)
+      tcp.callbacks[response.uuid] = true
+    }
+  })
 }
 
 Tcp.prototype.REGISTEROP = 0
@@ -23,6 +47,25 @@ Tcp.prototype.USERNAMEEXIST = 2
 
 Tcp.prototype.USERNAMENOTEXIST = 2
 Tcp.prototype.PASSWORDWRONG = 3
+
+Tcp.prototype.setSocketCloseListener = function (listener) {
+  this.socketCloseListener = listener
+}
+
+Tcp.prototype.setSocketErrorListener = function (listener) {
+  this.socketErrorListener = listener
+}
+
+Tcp.prototype.setServerMessageListener = function (listener) {
+  this.serverMessageListener = listener
+}
+
+Tcp.prototype.connectToServer = function (port, host) {
+  let tcp = this
+  return new Promise(function (resolve, reject) {
+    tcp.client.connect(port, host, resolve)
+  })
+}
 
 Tcp.prototype.write = function (object) {
   const json = JSON.stringify(object)
@@ -99,7 +142,7 @@ Tcp.prototype.search = function () {
   })
 }
 
-Tcp.prototype.add = function (username) {
+Tcp.prototype.add = function (users) {
   const uid = util.uuid()
   let tcp = this
   return new Promise(function (resolve, reject) {
@@ -107,7 +150,7 @@ Tcp.prototype.add = function (username) {
     tcp.write({
       action: tcp.ADDOP,
       uuid: uid,
-      username: username
+      users: users
     })
     tcp.setTimeout(uid)
   })
@@ -121,26 +164,14 @@ Tcp.prototype.sendMessage = function (username, message, time) {
     tcp.write({
       action: tcp.SENDMESSAGEOP,
       uuid: uid,
-      username: username,
-      message: message,
-      time: time
+      message: {
+        username: username,
+        message: message,
+        time: time
+      }
     })
     tcp.setTimeout(uid)
   })
 }
 
-Tcp.prototype.handleServerMessage = function (app, message) {
-  switch (message.action) {
-    case this.ADDOP:
-      app.$store.commit('addFriend', {
-        username: message.username
-      })
-      break
-    case this.SENDMESSAGEOP:
-      message.message.direction = 'object'
-      app.$store.commit('addMessage', message.message)
-      break
-  }
-}
-
-export default new Tcp()
+export default Tcp

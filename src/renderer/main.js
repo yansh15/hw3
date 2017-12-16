@@ -6,38 +6,10 @@ import router from './router'
 import store from './store'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
-import tcp from './util/tcp.js'
+import Tcp from './util/tcp.js'
 
 Vue.use(ElementUI)
-Vue.prototype.$tcp = tcp
-
-tcp.client.on('data', function (data) {
-  tcp.buffer.addNewBuffer(data)
-})
-
-tcp.client.on('close', function () {
-  store.commit('setConnect', {connect: false})
-})
-
-tcp.client.connect(store.state.tcp.port, store.state.tcp.host, function () {
-  store.commit('setConnect', {connect: true})
-})
-
-tcp.client.on('error', function (error) {
-  console.log(error.message)
-  store.commit('setConnect', {connect: false})
-  router.push('/network-error')
-})
-
-tcp.buffer.on('response', function (response) {
-  console.log(response)
-  if (response.uuid === 'message') {
-    tcp.handleServerMessage(app, response)
-  } else if (typeof tcp.callbacks[response.uuid] === 'function') {
-    tcp.callbacks[response.uuid](response)
-    tcp.callbacks[response.uuid] = true
-  }
-})
+Vue.prototype.$tcp = new Tcp()
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.http = Vue.prototype.$http = axios
@@ -52,3 +24,32 @@ let app = new Vue({
 })
 
 app.$mount('#app')
+
+app.$tcp.setSocketCloseListener(function () {
+  store.commit('setConnect', {connect: false})
+})
+
+app.$tcp.setSocketErrorListener(function (error) {
+  console.log(error)
+  store.commit('setConnect', {connect: false})
+  router.push('/network-error')
+})
+
+app.$tcp.setServerMessageListener(function (message) {
+  switch (message.action) {
+    case this.ADDOP:
+      app.$store.commit('addFriend', {
+        username: message.username
+      })
+      break
+    case this.SENDMESSAGEOP:
+      message.message.direction = 'object'
+      app.$store.commit('addMessage', message.message)
+      break
+  }
+});
+
+(async function () {
+  await app.$tcp.connectToServer(store.state.tcp.port, store.state.tcp.host)
+  store.commit('setConnect', {connect: true})
+})()

@@ -1,5 +1,3 @@
-import util from '../../util/index'
-
 /**
  *  friends: [{
  *    username: '',
@@ -16,42 +14,17 @@ import util from '../../util/index'
  *      }
  *    ]
  *  }]
+ *  allUsers: [
+ *    {
+ *      username: string
+ *    }
+ *  ]
  */
 
 const state = {
   username: '',
-  friends: [
-    {
-      username: 'lzl',
-      news: 2,
-      messages: [
-        {
-          type: 'M',
-          time: util.getCurrentSeconds(),
-          direction: 'object',
-          content: 'hello'
-        },
-        {
-          type: 'M',
-          time: util.getCurrentSeconds(),
-          direction: 'object',
-          content: 'i\'m lzl'
-        }
-      ]
-    },
-    {
-      username: 'xy',
-      news: 1,
-      messages: [
-        {
-          type: 'M',
-          time: util.getCurrentSeconds(),
-          direction: 'object',
-          content: 'hi'
-        }
-      ]
-    }
-  ]
+  friends: [],
+  allUsers: []
 }
 
 const mutations = {
@@ -85,11 +58,11 @@ const mutations = {
     })
     state.friends.map(function (friend) {
       friend.messages.sort(function (a, b) {
-        return a.time < b.time
+        return a.time > b.time
       })
     })
     state.friends.sort(function (a, b) {
-      return a.news > b.news
+      return a.news < b.news
     })
   },
   updateFileList (state, config) {
@@ -110,27 +83,34 @@ const mutations = {
     })
     state.friends.map(function (friend) {
       friend.messages.sort(function (a, b) {
-        return a.time < b.time
+        return a.time > b.time
       })
     })
     state.friends.sort(function (a, b) {
-      return a.news > b.news
+      return a.news < b.news
     })
   },
   clearUserInfo (state, config) {
     state.username = ''
     state.friends = []
   },
-  addFriend (state, config) {
-    state.friends.unshift({
-      username: config.username,
-      news: 0,
-      messages: []
+  updateAllUserList (state, config) {
+    state.allUsers = config.list
+  },
+  addFriends (state, config) {
+    config.list.map(function (item) {
+      state.friends.unshift({
+        username: item,
+        news: 0,
+        messages: []
+      })
     })
   },
   addMessage (state, config) {
     const index = state.friends.findIndex(function (item) { return item.username === config.username })
-    state.friends[index].news += 1
+    if (config.direction === 'object') {
+      state.friends[index].news += 1
+    }
     state.friends[index].messages.push({
       type: 'M',
       time: config.time,
@@ -138,6 +118,10 @@ const mutations = {
       content: config.message
     })
     state.friends.unshift(state.friends.splice(index, 1)[0])
+  },
+  clearNews (state, config) {
+    const index = state.friends.findIndex(function (item) { return item.username === config.username })
+    state.friends[index].news = 0
   }
 }
 
