@@ -38,8 +38,8 @@ app.$tcp.setSocketErrorListener(function (error) {
 app.$tcp.setServerMessageListener(function (message) {
   switch (message.action) {
     case this.ADDOP:
-      app.$store.commit('addFriend', {
-        username: message.username
+      app.$store.commit('addFriends', {
+        list: [message.username]
       })
       break
     case this.SENDMESSAGEOP:

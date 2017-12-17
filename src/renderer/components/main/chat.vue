@@ -18,7 +18,7 @@
         </div>
       </div>
     </div>
-    <div id="chat-window" v-if="curFriend !== null">
+    <div id="chat-window" v-if="curFriend.username !== ''">
       <div id="chat-window-title">
         <p class="username">{{curFriend.username}}</p>
       </div>
@@ -53,7 +53,11 @@ export default {
   name: 'chat',
   data () {
     return {
-      curFriend: null,
+      curFriend: {
+        username: '',
+        news: 0,
+        messages: []
+      },
       friendFilterText: '',
       sendText: '',
       searchDialogVisible: false,
@@ -88,6 +92,12 @@ export default {
         return item.username.indexOf(vm.searchFilterText) > -1
       })
     }
+  },
+  mounted () {
+    this.$watch('curFriend.messages', function (newVal, oldVal) {
+      const div = document.getElementById('chat-window-up')
+      div.scrollTop = div.scrollHeight
+    })
   },
   methods: {
     getLastMessageTime (friend) {
@@ -249,6 +259,7 @@ $sidebar-width: 50px;
 }
 #chat-window-up {
   flex: 1 1 auto;
+  overflow-y: auto;
 }
 #chat-window-down {
   flex: 0 0 auto;

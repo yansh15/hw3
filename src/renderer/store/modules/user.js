@@ -24,6 +24,7 @@
 const state = {
   username: '',
   friends: [],
+  curFriendName: '',
   allUsers: []
 }
 
@@ -108,7 +109,7 @@ const mutations = {
   },
   addMessage (state, config) {
     const index = state.friends.findIndex(function (item) { return item.username === config.username })
-    if (config.direction === 'object') {
+    if (config.direction === 'object' && config.username !== state.curFriendName) {
       state.friends[index].news += 1
     }
     state.friends[index].messages.push({
@@ -122,6 +123,7 @@ const mutations = {
   clearNews (state, config) {
     const index = state.friends.findIndex(function (item) { return item.username === config.username })
     state.friends[index].news = 0
+    state.curFriendName = config.username
   }
 }
 
