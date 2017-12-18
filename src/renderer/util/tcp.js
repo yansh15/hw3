@@ -2,176 +2,171 @@ import { Socket } from 'net'
 import util from './index.js'
 import TcpBuffer from './buffer.js'
 
-function Tcp () {
-  this.connect = false
-  this.client = new Socket()
-  this.callbacks = []
-  this.buffer = new TcpBuffer()
-  this.socketCloseListener = function () {}
-  this.socketErrorListener = function (error) { console.log(error) }
-  this.serverMessageListener = function (message) {}
-
-  let tcp = this
-  this.client.on('data', function (data) {
-    tcp.buffer.addNewBuffer(data)
-  })
-  this.client.on('close', function () {
-    tcp.socketCloseListener()
-  })
-  this.client.on('error', function (error) {
-    tcp.socketErrorListener(error)
-  })
-
-  this.buffer.on('response', function (response) {
-    console.log(response)
-    if (typeof tcp.callbacks[response.uuid] === 'undefined') {
-      tcp.serverMessageListener(response)
-    } else if (typeof tcp.callbacks[response.uuid] === 'function') {
-      tcp.callbacks[response.uuid](response)
-      tcp.callbacks[response.uuid] = true
-    }
-  })
-}
-
-Tcp.prototype.REGISTEROP = 0
-Tcp.prototype.LOGINOP = 1
-Tcp.prototype.QUITOP = 2
-Tcp.prototype.SEARCHOP = 3
-Tcp.prototype.ADDOP = 4
-Tcp.prototype.SENDMESSAGEOP = 5
-
-Tcp.prototype.SUCCESS = 0
-Tcp.prototype.TIMEOUT = 1
-
-Tcp.prototype.USERNAMEEXIST = 2
-
-Tcp.prototype.USERNAMENOTEXIST = 2
-Tcp.prototype.PASSWORDWRONG = 3
-
-Tcp.prototype.setSocketCloseListener = function (listener) {
-  this.socketCloseListener = listener
-}
-
-Tcp.prototype.setSocketErrorListener = function (listener) {
-  this.socketErrorListener = listener
-}
-
-Tcp.prototype.setServerMessageListener = function (listener) {
-  this.serverMessageListener = listener
-}
-
-Tcp.prototype.connectToServer = function (port, host) {
-  let tcp = this
-  return new Promise(function (resolve, reject) {
-    tcp.client.connect(port, host, resolve)
-  })
-}
-
-Tcp.prototype.write = function (object) {
-  const json = JSON.stringify(object)
-  const len = Buffer.byteLength(json)
-  let data = Buffer.alloc(2 + len)
-  data.writeUInt16LE(len)
-  data.write(json, 2)
-  this.client.write(data)
-}
-
-Tcp.prototype.setTimeout = function (uuid) {
-  let v = this
-  setTimeout(function () {
-    if (v.callbacks[uuid] !== true) {
-      v.callbacks[uuid]({ status: v.TIMEOUT })
-    }
-    delete v.callbacks[uuid]
-  }, 3000)
-}
-
-Tcp.prototype.register = function (username, password) {
-  const uid = util.uuid()
-  let tcp = this
-  return new Promise(function (resolve, reject) {
-    tcp.callbacks[uid] = resolve
-    tcp.write({
-      action: tcp.REGISTEROP,
-      uuid: uid,
-      username: username,
-      password: password
-    })
-    tcp.setTimeout(uid)
-  })
-}
-
-Tcp.prototype.login = function (username, password) {
-  const uid = util.uuid()
-  let tcp = this
-  return new Promise(function (resolve, reject) {
-    tcp.callbacks[uid] = resolve
-    tcp.write({
-      action: tcp.LOGINOP,
-      uuid: uid,
-      username: username,
-      password: password
-    })
-    tcp.setTimeout(uid)
-  })
-}
-
-Tcp.prototype.quit = function () {
-  const uid = util.uuid()
-  let tcp = this
-  return new Promise(function (resolve, reject) {
-    tcp.callbacks[uid] = resolve
-    tcp.write({
-      action: tcp.QUITOP,
-      uuid: uid
-    })
-    tcp.setTimeout(uid)
-  })
-}
-
-Tcp.prototype.search = function () {
-  const uid = util.uuid()
-  let tcp = this
-  return new Promise(function (resolve, reject) {
-    tcp.callbacks[uid] = resolve
-    tcp.write({
-      action: tcp.SEARCHOP,
-      uuid: uid
-    })
-    tcp.setTimeout(uid)
-  })
-}
-
-Tcp.prototype.add = function (users) {
-  const uid = util.uuid()
-  let tcp = this
-  return new Promise(function (resolve, reject) {
-    tcp.callbacks[uid] = resolve
-    tcp.write({
-      action: tcp.ADDOP,
-      uuid: uid,
-      users: users
-    })
-    tcp.setTimeout(uid)
-  })
-}
-
-Tcp.prototype.sendMessage = function (username, message, time) {
-  const uid = util.uuid()
-  let tcp = this
-  return new Promise(function (resolve, reject) {
-    tcp.callbacks[uid] = resolve
-    tcp.write({
-      action: tcp.SENDMESSAGEOP,
-      uuid: uid,
-      message: {
-        username: username,
-        message: message,
-        time: time
+class Tcp {
+  constructor () {
+    this.connect = false
+    this.client = new Socket()
+    this.callbacks = []
+    this.buffer = new TcpBuffer()
+    this.socketCloseListener = function () {}
+    this.socketErrorListener = function (error) { console.log(error) }
+    this.serverMessageListener = function (message) {}
+    this.client.on('data', function (data) {
+      this.buffer.addNewBuffer(data)
+    }.bind(this))
+    this.client.on('close', function () {
+      this.socketCloseListener()
+    }.bind(this))
+    this.client.on('error', function (error) {
+      this.socketErrorListener(error)
+    }.bind(this))
+    this.buffer.on('response', function (response) {
+      console.log(response)
+      if (typeof this.callbacks[response.uuid] === 'undefined') {
+        this.serverMessageListener(response)
+      } else if (typeof this.callbacks[response.uuid] === 'function') {
+        this.callbacks[response.uuid](response)
+        this.callbacks[response.uuid] = true
       }
-    })
-    tcp.setTimeout(uid)
-  })
+    }.bind(this))
+  }
+
+  // actions number
+  REGISTEROP = 0
+  LOGINOP = 1
+  QUITOP = 2
+  SEARCHOP = 3
+  ADDOP = 4
+  SENDMESSAGEOP = 5
+
+  // global status number
+  SUCCESS = 0
+  TIMEOUT = 1
+
+  // register error number
+  USERNAMEEXIST = 2
+
+  // login error number
+  USERNAMENOTEXIST = 2
+  PASSWORDWRONG = 3
+
+  setSocketCloseListener (listener) {
+    this.socketCloseListener = listener
+  }
+
+  setSocketErrorListener (listener) {
+    this.socketErrorListener = listener
+  }
+
+  setServerMessageListener (listener) {
+    this.serverMessageListener = listener
+  }
+
+  connectToServer (port, host) {
+    return new Promise(function (resolve, reject) {
+      this.client.connect(port, host, resolve)
+    }.bind(this))
+  }
+
+  write (object) {
+    const json = JSON.stringify(object)
+    const len = Buffer.byteLength(json)
+    let data = Buffer.alloc(2 + len)
+    data.writeUInt16LE(len)
+    data.write(json, 2)
+    this.client.write(data)
+  }
+
+  setTimeout (uuid) {
+    setTimeout(function () {
+      if (this.callbacks[uuid] !== true) {
+        this.callbacks[uuid]({ status: this.TIMEOUT })
+      }
+      delete this.callbacks[uuid]
+    }.bind(this), 3000)
+  }
+
+  register (username, password) {
+    const uid = util.uuid()
+    return new Promise(function (resolve, reject) {
+      this.callbacks[uid] = resolve
+      this.write({
+        action: this.REGISTEROP,
+        uuid: uid,
+        username: username,
+        password: password
+      })
+      this.setTimeout(uid)
+    }.bind(this))
+  }
+
+  login (username, password) {
+    const uid = util.uuid()
+    return new Promise(function (resolve, reject) {
+      this.callbacks[uid] = resolve
+      this.write({
+        action: this.LOGINOP,
+        uuid: uid,
+        username: username,
+        password: password
+      })
+      this.setTimeout(uid)
+    }.bind(this))
+  }
+
+  quit () {
+    const uid = util.uuid()
+    return new Promise(function (resolve, reject) {
+      this.callbacks[uid] = resolve
+      this.write({
+        action: this.QUITOP,
+        uuid: uid
+      })
+      this.setTimeout(uid)
+    }.bind(this))
+  }
+
+  search () {
+    const uid = util.uuid()
+    return new Promise(function (resolve, reject) {
+      this.callbacks[uid] = resolve
+      this.write({
+        action: this.SEARCHOP,
+        uuid: uid
+      })
+      this.setTimeout(uid)
+    }.bind(this))
+  }
+
+  add (users) {
+    const uid = util.uuid()
+    return new Promise(function (resolve, reject) {
+      this.callbacks[uid] = resolve
+      this.write({
+        action: this.ADDOP,
+        uuid: uid,
+        users: users
+      })
+      this.setTimeout(uid)
+    }.bind(this))
+  }
+
+  sendMessage (username, message, time) {
+    const uid = util.uuid()
+    return new Promise(function (resolve, reject) {
+      this.callbacks[uid] = resolve
+      this.write({
+        action: this.SENDMESSAGEOP,
+        uuid: uid,
+        message: {
+          username: username,
+          message: message,
+          time: time
+        }
+      })
+      this.setTimeout(uid)
+    }.bind(this))
+  }
 }
 
 export default Tcp

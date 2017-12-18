@@ -1,8 +1,6 @@
-import { Socket } from 'net'
-// import util from './index.js'
+import Tcp from './tcp'
 
-function FileTcp () {
-  this.client = new Socket()
+class FileTcp extends Tcp {
 }
 
 export default FileTcp
