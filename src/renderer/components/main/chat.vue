@@ -24,12 +24,19 @@
       </div>
       <div id="chat-window-up">
         <div v-for="(item, index) in curFriend.messages" :key="index">
-          <message-box :time="getStringFromSeconds(item.time)" :content="item.content" :subject="item.direction === 'subject'"></message-box>
+          <message-box v-if="item.type === 'M'" :time="getStringFromSeconds(item.time)" :content="item.content" :subject="item.direction === 'subject'"></message-box>
+          <file-box v-if="item.type === 'F'" :file="item"></file-box>
         </div>
       </div>
       <div id="chat-window-down">
         <el-input type="textarea" :rows="3" placeholder="请输入内容" v-model="sendText"></el-input>
-        <el-button id="chat-window-down-button" size="mini" type="success" :plain="true" :disabled="sendText === ''" @click="handleSendMessage">发送</el-button>
+        <div id="chat-window-down-buttons">
+          <el-button id="chat-window-down-message" size="mini" type="success" :plain="true" :disabled="sendText === ''" @click="handleSendMessage">发送</el-button>
+          <el-button :plain="true" size="mini" type="success" id="chat-window-down-file">
+            上传文件
+            <input type="file" id="chat-window-down-file-input" @change="handleUploadFile">
+          </el-button>
+        </div>
       </div>
     </div>
     <el-dialog title="添加好友" append-to-body modal-append-to-body :visible.sync="searchDialogVisible" width="50%" center>
@@ -49,6 +56,8 @@
 <script>
 import util from '../../util/index'
 import MessageBox from '../common/messagebox'
+import FileBox from '../common/filebox'
+import SendFileTcp from '../../util/sendfiletcp'
 export default {
   name: 'chat',
   data () {
@@ -172,10 +181,44 @@ export default {
           this.$message.error('network timeout')
           break
       }
+    },
+    handleUploadFile: async function (event) {
+      const username = this.curFriend.username
+      const time = util.getCurrentSeconds()
+      const file = event.target.files[0]
+      // name path size
+      let response = await this.$tcp.sendFile(username, file.name, file.size, time)
+      switch (response.status) {
+        case this.$tcp.SUCCESS: {
+          this.$store.commit('addFile', {
+            username: username,
+            time: time,
+            direction: 'subject',
+            filename: file.name,
+            size: file.size,
+            uuid: response.fileuuid
+          })
+          let filetcp = new SendFileTcp()
+          filetcp.setUpdateFSizeListener(function (fsize) {
+            this.$store.commit('updateFileFSize', {
+              username: username,
+              uuid: response.fileuuid,
+              fsize: fsize
+            })
+          }.bind(this))
+          await filetcp.connectToServer(this.$store.state.tcp.port, this.$store.state.tcp.host)
+          filetcp.send(file.name, file.path, file.size, response.fileuuid)
+          break
+        }
+        case this.$tcp.TIMEOUT:
+          this.$message.error('network timeout')
+          break
+      }
     }
   },
   components: {
-    MessageBox
+    MessageBox,
+    FileBox
   }
 }
 </script>
@@ -265,10 +308,30 @@ $sidebar-width: 50px;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
   border-top: 1px #E8E8E8 solid;
 }
-#chat-window-down-button {
+#chat-window-down-buttons {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+#chat-window-down-message {
   margin: 5px;
+}
+
+#chat-window-down-file {
+  margin: 5px;
+  position: relative;
+  overflow: hidden;
+}
+
+#chat-window-down-file-input {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
 }
 </style>

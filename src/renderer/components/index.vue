@@ -33,6 +33,7 @@
 
 <script>
 import util from '../util/index'
+import ReceiveFileTcp from '../util/receivefiletcp'
 export default {
   name: 'index',
   data () {
@@ -130,6 +131,18 @@ export default {
           this.$store.commit('updateFriendList', { list: response.friends })
           this.$store.commit('updateMessageList', { list: response.messages })
           this.$store.commit('updateFileList', { list: response.files })
+          response.files.map(async function (item) {
+            let filetcp = new ReceiveFileTcp()
+            filetcp.setUpdateFSizeListener(function (fsize) {
+              this.$store.commit('updateFileFSize', {
+                username: item.username,
+                uuid: item.uuid,
+                fsize: fsize
+              })
+            }.bind(this))
+            await filetcp.connectToServer(this.$store.state.tcp.port, this.$store.state.tcp.host)
+            filetcp.receive(item.filename, item.size, item.uuid)
+          }.bind(this))
           this.$router.push('/main/chat')
           break
         case this.$tcp.TIMEOUT:

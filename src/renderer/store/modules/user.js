@@ -11,6 +11,7 @@
  *        filename: '', (only F)
  *        size: 0, (only F)
  *        uuid: '' (only F)
+ *        fsize: 0 (only F)
  *      }
  *    ]
  *  }]
@@ -79,7 +80,8 @@ const mutations = {
         direction: 'object',
         filename: file.filename,
         size: file.size,
-        uuid: file.uuid
+        uuid: file.uuid,
+        fsize: 0
       })
     })
     state.friends.map(function (friend) {
@@ -120,10 +122,30 @@ const mutations = {
     })
     state.friends.unshift(state.friends.splice(index, 1)[0])
   },
+  addFile (state, config) {
+    const index = state.friends.findIndex(function (item) { return item.username === config.username })
+    if (config.direction === 'object' && config.username !== state.curFriendName) {
+      state.friends[index].news += 1
+    }
+    state.friends[index].messages.push({
+      type: 'F',
+      time: config.time,
+      direction: config.direction,
+      filename: config.filename,
+      size: config.size,
+      uuid: config.uuid,
+      fsize: 0
+    })
+  },
   clearNews (state, config) {
     const index = state.friends.findIndex(function (item) { return item.username === config.username })
     state.friends[index].news = 0
     state.curFriendName = config.username
+  },
+  updateFileFSize (state, config) {
+    const index = state.friends.findIndex(function (item) { return item.username === config.username })
+    const fIndex = state.friends[index].messages.findIndex(function (item) { return item.type === 'F' && item.uuid === config.uuid })
+    state.friends[index].messages[fIndex].fsize = config.fsize
   }
 }
 

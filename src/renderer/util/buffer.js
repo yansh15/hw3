@@ -20,9 +20,9 @@ class TcpBuffer {
       return false
     }
     let firstBuffer = this.buffers[0]
-    const length = firstBuffer.readUInt16LE(this.offset)
+    const length = firstBuffer.readUInt32LE(this.offset)
     let index = 1
-    let sum = firstBuffer.length - this.offset - 2
+    let sum = firstBuffer.length - this.offset - 4
     while (sum < length && index < this.buffers.length) {
       sum += this.buffers[index].length
       ++index
@@ -32,8 +32,8 @@ class TcpBuffer {
 
   getNextEntireResponse () {
     let firstBuffer = this.buffers[0]
-    let length = firstBuffer.readUInt16LE(this.offset)
-    this.offset = this.offset + 2
+    let length = firstBuffer.readUInt32LE(this.offset)
+    this.offset = this.offset + 4
     let ret = Buffer.alloc(length)
     let curFirstBufferSize = firstBuffer.length - this.offset
     while (curFirstBufferSize <= length) {
@@ -56,7 +56,10 @@ class TcpBuffer {
     this.buffers.push(buffer)
     while (this.haveEntireResponse()) {
       let response = this.getNextEntireResponse()
-      this.emitter.emit('response', JSON.parse(response.toString()))
+      let headerLen = response.readUInt16LE(0)
+      let header = response.slice(2, 2 + headerLen)
+      let body = response.slice(2 + headerLen)
+      this.emitter.emit('response', JSON.parse(header.toString()), body)
     }
   }
 }

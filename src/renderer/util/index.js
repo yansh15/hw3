@@ -26,6 +26,30 @@ export default {
   getCurrentSeconds: function () {
     return Math.ceil(new Date().getTime() / 1000)
   },
+  fileSizeFormat: function (size, prec) {
+    let rank = 0
+    let unit = 'B'
+    while (size > 1024) {
+      size = size / 1024
+      ++rank
+    }
+    size = Math.ceil(size)
+    switch (rank) {
+      case 1:
+        unit = 'KB'
+        break
+      case 2:
+        unit = 'MB'
+        break
+      case 3:
+        unit = 'GB'
+        break
+      case 4:
+        unit = 'TB'
+        break
+    }
+    return size + ' ' + unit
+  },
   usernameRegex: /^[A-Za-z0-9]{4,64}$/,
   passwordRegex: /^[A-Za-z0-9]{4,64}$/
 }

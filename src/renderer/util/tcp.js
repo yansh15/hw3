@@ -1,6 +1,6 @@
 import { Socket } from 'net'
-import util from './index.js'
-import TcpBuffer from './buffer.js'
+import util from './index'
+import TcpBuffer from './buffer'
 
 class Tcp {
   constructor () {
@@ -20,8 +20,8 @@ class Tcp {
     this.client.on('error', function (error) {
       this.socketErrorListener(error)
     }.bind(this))
-    this.buffer.on('response', function (response) {
-      console.log(response)
+    this.buffer.on('response', function (response, body) {
+      response.body = body
       if (typeof this.callbacks[response.uuid] === 'undefined') {
         this.serverMessageListener(response)
       } else if (typeof this.callbacks[response.uuid] === 'function') {
@@ -38,6 +38,14 @@ class Tcp {
   SEARCHOP = 3
   ADDOP = 4
   SENDMESSAGEOP = 5
+  SENDFILEOP = 6
+  SENDFILEDATASTARTOP = 7
+  SENDFILEDATAOP = 8
+  SENDFILEDATAENDOP = 9
+  RECEIVEFILEOP = 10
+  RECEIVEFILEDATASTARTOP = 11
+  RECEIVEFILEDATAOP = 12
+  RECEIVEFILEDATAENDOP = 13
 
   // global status number
   SUCCESS = 0
@@ -68,22 +76,23 @@ class Tcp {
     }.bind(this))
   }
 
-  write (object) {
-    const json = JSON.stringify(object)
+  write (header) {
+    const json = JSON.stringify(header)
     const len = Buffer.byteLength(json)
-    let data = Buffer.alloc(2 + len)
-    data.writeUInt16LE(len)
-    data.write(json, 2)
+    let data = Buffer.alloc(6 + len)
+    data.writeUInt32LE(len + 2)
+    data.writeUInt16LE(len, 4)
+    data.write(json, 6)
     this.client.write(data)
   }
 
-  setTimeout (uuid) {
+  setTimeout (uuid, timeout = 3000) {
     setTimeout(function () {
       if (this.callbacks[uuid] !== true) {
         this.callbacks[uuid]({ status: this.TIMEOUT })
       }
       delete this.callbacks[uuid]
-    }.bind(this), 3000)
+    }.bind(this), timeout)
   }
 
   register (username, password) {
@@ -161,6 +170,25 @@ class Tcp {
         message: {
           username: username,
           message: message,
+          time: time
+        }
+      })
+      this.setTimeout(uid)
+    }.bind(this))
+  }
+
+  sendFile (username, filename, size, time) {
+    const uid = util.uuid()
+    return new Promise(function (resolve, reject) {
+      this.callbacks[uid] = resolve
+      this.write({
+        action: this.SENDFILEOP,
+        uuid: uid,
+        file: {
+          username: username,
+          filename: filename,
+          uuid: uid,
+          size: size,
           time: time
         }
       })

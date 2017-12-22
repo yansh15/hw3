@@ -80,7 +80,7 @@ export default {
 
 .message-box .message-box--description {
   font-size: 18px;
-	margin: 0px;
+	margin: 5px 0px 0px 0px;
 	padding: 0px;
 }
 
