@@ -4,7 +4,7 @@
       <div class="file-box--content">
         <p class="file-box--time">{{ time }}</p>
         <p class="file-box--filename">{{ filename }}</p>
-        <p class="file-box--size">{{ size }} 已上传 {{ fsize }}</p>
+        <p class="file-box--size">{{ size }} {{subject ? '已上传' : '已下载'}} {{ fsize }}</p>
       </div>
     </div>
   </transition>

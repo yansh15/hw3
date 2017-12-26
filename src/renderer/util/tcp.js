@@ -57,6 +57,7 @@ class Tcp {
   // login error number
   USERNAMENOTEXIST = 2
   PASSWORDWRONG = 3
+  ALREADYLOGIN = 4
 
   setSocketCloseListener (listener) {
     this.socketCloseListener = listener

@@ -154,6 +154,9 @@ export default {
         case this.$tcp.PASSWORDWRONG:
           this.$message.error('password wrong')
           break
+        case this.$tcp.ALREADYLOGIN:
+          this.$message.error('this user has already logined')
+          break
       }
     }
   }

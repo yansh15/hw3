@@ -119,7 +119,14 @@ export default {
       if (friend.messages.length === 0) {
         return ''
       }
-      return friend.messages[friend.messages.length - 1].content
+      let ret = friend.messages[friend.messages.length - 1].content
+      if (!ret) {
+        ret = friend.messages[friend.messages.length - 1].filename
+      }
+      if (ret.length > 20) {
+        ret = ret.substr(0, 20) + '...'
+      }
+      return ret
     },
     openSearchDialog: async function () {
       this.searchDialogVisible = true
@@ -226,7 +233,7 @@ export default {
 <style lang="scss">
 $sidebar-width: 50px;
 #chat-page {
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   display: flex;
   background-color: #F5F5F5;
 }
@@ -285,7 +292,7 @@ $sidebar-width: 50px;
   background-color: #DEDEDE;
 }
 #chat-window {
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
 }

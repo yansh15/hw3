@@ -1,13 +1,18 @@
 <template>
   <div id="main-page">
     <div id="main-sidebar">
-      <div id="main-quit-container" @click="quit">
+      <div class="icon-container" @click="quit">
         <i class="el-icon-back"></i>
+      </div>
+      <div class="icon-container" @click="profile">
+        <i class="el-icon-setting"></i>
+      </div>
+      <div class="icon-container" @click="chat">
+        <i class="el-icon-message"></i>
       </div>
     </div>
     <div id="main-content">
       <router-view></router-view>
-    </div>
     </div>
   </div>
 </template>
@@ -20,6 +25,12 @@ export default {
     }
   },
   methods: {
+    chat () {
+      this.$router.push('/main/chat')
+    },
+    profile () {
+      this.$router.push('/main/profile')
+    },
     quit: async function () {
       let response = await this.$tcp.quit()
       switch (response.status) {
@@ -40,7 +51,7 @@ export default {
 <style lang="scss">
 $sidebar-width: 50px;
 #main-page {
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   display: flex;
 }
 #main-sidebar {
@@ -49,7 +60,7 @@ $sidebar-width: 50px;
   flex-direction: column-reverse;
   background-color: #27292D;
 }
-#main-quit-container {
+.icon-container {
   flex: 0 0 $sidebar-width;
   display: flex;
   justify-content: center;
@@ -59,7 +70,7 @@ $sidebar-width: 50px;
   }
 }
 #main-content {
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   display: flex;
 }
 </style>

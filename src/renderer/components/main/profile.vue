@@ -1,5 +1,6 @@
 <template>
   <div id="profile-page">
+    <h1>当前用户: {{$store.state.user.username}}</h1>
   </div>
 </template>
 
@@ -16,9 +17,14 @@ export default {
 </script>
 
 <style lang="scss">
-$sidebar-width: 50px;
 #profile-page {
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #F5F5F5;
+  h1 {
+    color: #606266;
+  }
 }
 </style>

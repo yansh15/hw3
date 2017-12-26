@@ -1,7 +1,7 @@
 const state = {
   connect: false,
   host: '127.0.0.1',
-  port: 8052
+  port: 8053
 }
 
 const mutations = {

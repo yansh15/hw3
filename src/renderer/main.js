@@ -6,7 +6,8 @@ import router from './router'
 import store from './store'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
-import Tcp from './util/tcp.js'
+import Tcp from './util/tcp'
+import ReceiveFileTcp from './util/receivefiletcp'
 
 Vue.use(ElementUI)
 Vue.prototype.$tcp = new Tcp()
@@ -35,7 +36,7 @@ app.$tcp.setSocketErrorListener(function (error) {
   router.push('/network-error')
 })
 
-app.$tcp.setServerMessageListener(function (message) {
+app.$tcp.setServerMessageListener(async function (message) {
   switch (message.action) {
     case this.ADDOP:
       app.$store.commit('addFriends', {
@@ -45,6 +46,21 @@ app.$tcp.setServerMessageListener(function (message) {
     case this.SENDMESSAGEOP:
       message.message.direction = 'object'
       app.$store.commit('addMessage', message.message)
+      break
+    case this.SENDFILEOP:
+      console.log('send file op')
+      message.file.direction = 'object'
+      app.$store.commit('addFile', message.file)
+      let filetcp = new ReceiveFileTcp()
+      filetcp.setUpdateFSizeListener(function (fsize) {
+        app.$store.commit('updateFileFSize', {
+          username: message.file.username,
+          uuid: message.file.uuid,
+          fsize: fsize
+        })
+      })
+      await filetcp.connectToServer(app.$store.state.tcp.port, app.$store.state.tcp.host)
+      filetcp.receive(message.file.filename, message.file.size, message.file.uuid)
       break
   }
 });
